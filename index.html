@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weight Loss Warriors</title>
+    <link rel="stylesheet" href="calendar.css">
+  </head>
+  <body >
+    <script src="react-basics.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <div class="js-container"></div>
+    <script type="text/babel">
+
+        const today = new Date();
+        const dayOfWeekArray = [0,1,2,3,4,5,6];
+        const monthArray = ['Janurary', 'Feburary', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        console.log('LOCAL STORAGE BEFORE: ', localStorage);
+        var streak = JSON.parse(localStorage.getItem('streak'));
+        var nextCheatDay = JSON.parse(localStorage.getItem('nextCheatDay'));
+        var day = 1;
+        var dateID = 1;
+        var noJunkToday = JSON.parse(localStorage.getItem('noJunkToday'));
+        var calendarMatrix;
+        var userJunkFoodData = JSON.parse(localStorage.getItem('junkFoodArray'));
+        var userJunkIndex = 0;
+        var cheatHide = JSON.parse(localStorage.getItem('cheatHide'));
+        checkStatus();
+        const userJunkLength = userJunkFoodData.length;
+        console.log('userJunkLength: ', userJunkLength, 'userJunkArray: ', userJunkFoodData);
+        const firstRecordedDate = today.getDate() - userJunkLength;
+        console.log('firstRecordedDate: ', firstRecordedDate);
+        console.log('junkFoodArray Before: ', userJunkFoodData);
+        console.log('LOCAL STORAGE AFTER: ', localStorage);
+
+        function checkStatus(){
+            checkIfDayChanged();
+            checkIfMonthChanged();
+        }
+
+        function hardReset(){
+            const date = new Date(2025, 8, 1);
+            updateCalendarArray(getdaysInMonth());
+            localStorage.setItem('savedMonth', JSON.stringify(date.getMonth()));
+            localStorage.setItem('junkFoodArray', JSON.stringify([]));
+            localStorage.setItem('savedDate', JSON.stringify(date.getDate()));
+            localStorage.setItem('noJunkToday', JSON.stringify(false));
+            localStorage.setItem('streak', JSON.stringify(0));
+            localStorage.setItem('nextCheatDay', JSON.stringify(5));
+            localStorage.setItem('cheatHide', JSON.stringify(true));
+            console.log('RESET ALL LOCAL STORAGE');
+        }
+
+        function checkIfMonthChanged(){ //if month changed reset calendarmatrix and junkfood array
+           const currentmonth = today.getMonth();
+           if (currentmonth !== JSON.parse(localStorage.getItem('savedMonth'))){ // if month changed
+               updateCalendarArray(getdaysInMonth());
+               localStorage.setItem('junkFoodArray', JSON.stringify([]));
+               userJunkFoodData = JSON.parse(localStorage.getItem('junkFoodArray'));
+               console.log('MONTH CHANGEDDDD, RESETTING STUFF');
+           }
+           calendarMatrix = JSON.parse(localStorage.getItem('datePositions'));
+        }
+
+        function checkIfDayChanged(){
+            const currentDate = today.getDate();
+            if (currentDate !== JSON.parse(localStorage.getItem('savedDate'))){ //if current date != saved date, update the current date and userjunkfoodarray
+                localStorage.setItem('savedDate', JSON.stringify(currentDate));
+                console.log('date changed, currentDate UPDATED');
+                checkStreakandCheat();
+                buildJunkFoodArray();
+
+            }
+        }
+
+        function checkStreakandCheat(){
+            if (noJunkToday){
+                streak++;
+                nextCheatDay--;
+                if (nextCheatDay === 0){
+                    nextCheatDay = 5;
+                    cheatHide = false;
+                }
+                else if (nextCheatDay === 4){
+                    cheatHide = true;
+                }
+            }
+            else {
+                streak = 0;
+                nextCheatDay = 5;
+                cheatHide = true;
+            }
+            localStorage.setItem('streak', JSON.stringify(streak));
+            localStorage.setItem('nextCheatDay', JSON.stringify(nextCheatDay));
+            localStorage.setItem('cheatHide', JSON.stringify(cheatHide));
+            console.log("Streak, nextCheatDay and cheatHide UPDATED");
+        }
+
+        function updateCalendarArray(resources){ //builds the 2d calendar array
+            var datePositions = [[]];
+            const firstDayOfTheWeek = resources[1];
+            const totalDays = resources[2];
+            const remainingDays = totalDays;
+            var row = 0;
+            var col = 0;
+            //1st part
+
+            for (col; col <= 6; col++){ // initilize the first date of the month + blank dates at the start
+                if (dayOfWeekArray[col] === firstDayOfTheWeek){
+                    datePositions[row].push(1);
+                    col++;
+                    break;
+                }
+                else {
+                    datePositions[row].push(0);
+                }
+            }
+            //2nd part
+
+            for (let count = 0; count < totalDays - 1; count++){ // initilize the rest of the dates
+                if (col <= 6){
+                    datePositions[row].push(1);
+                }
+                else {
+                    datePositions.push([]);
+                    row++;
+                    col = 0;
+                    datePositions[row].push(1);
+                }
+                col++;
+            }
+            //3rd part
+
+            var lastWeek = datePositions[row].length;
+            for (let i = 0; i < 7 - lastWeek; i++){ // finish initilizing the remaining blank dates
+                datePositions[row].push(0);
+            }
+            console.log('2D Calendar Array Built.')
+            console.log(JSON.stringify(datePositions));
+            localStorage.setItem('datePositions', JSON.stringify(datePositions));
+            console.log('datePositions saved');
+            localStorage.setItem('savedMonth', JSON.stringify(resources[0]));
+            console.log('savedMonth saved');
+
+        }
+
+        function buildJunkFoodArray(){
+            console.log('userJunk Food Before: ', userJunkFoodData);
+            if (noJunkToday){
+                userJunkFoodData.push(1);
+            }
+            else {
+                userJunkFoodData.push(0);
+            }
+            localStorage.setItem('junkFoodArray', JSON.stringify(userJunkFoodData));
+            userJunkFoodData = JSON.parse(localStorage.getItem('junkFoodArray'));
+            console.log('junkFoodArray SAVED.', userJunkFoodData);
+            noJunkToday = false;
+            localStorage.setItem('noJunkToday', JSON.stringify(noJunkToday));
+            console.log('resetted and SAVED noJunkToday var: ', noJunkToday);
+        }   
+
+        function buildDay(currentDate, index){ //plan to take in calendarmatrix and junkfoodarray and current date, no need to combine both data into 1
+            if (currentDate === 0){
+                return <BlankDay key={index}/>
+            }
+            else { 
+
+                if (dateID >= firstRecordedDate && userJunkIndex < userJunkLength){
+                    day++;
+                    if(userJunkFoodData[userJunkIndex] === 1){
+                        userJunkIndex++;
+                        return <TickBox key={index} dateID={dateID++}/>;
+                    }
+
+                    else {
+                        userJunkIndex++;
+                        return <CrossBox key={index} dateID={dateID++}/>;
+                    }
+                }
+                else {
+                    if (day == today.getDate()){
+                        return <TodayBox key={index} dateID={dateID++} date={day++}/>;
+                    }
+                    else {
+                        return <DateBox key={index} dateID={dateID++} date={day++}/>;
+                    }    
+                }
+            }  
+        }
+
+        function buildWeek(currentWeek, index){
+
+            var week = calendarMatrix[index].map((currentDate, index)=>buildDay(currentDate, index));
+            return <WeekBox dateBoxes={week}/>;
+        }
+
+        function buildMonth() { 
+            console.log(userJunkFoodData)
+            var month = calendarMatrix.map((currentDate, index)=>buildWeek(currentDate, index));
+            console.log('MONTH BUILT')
+            return <MonthBox monthBox={month}/>;
+        }
+
+        function getdaysInMonth(){ //0 days means the last day of last month
+            const month = today.getMonth();
+            const year = today.getFullYear();
+            const week = new Date(year, month, 1);
+            const totalDays = new Date(year, month + 1, 0);
+            return [month, week.getDay(),totalDays.getDate()]; //[current month, day of the week, total days in month]
+        }
+
+//----------------------------------------------------
+        
+        function Title(){
+            return <h1 id='title'>Weight Loss Warriors</h1>
+        }
+
+        function DateBox(props) { //jsx component functions must be camelcase
+            return <div className='datebox' id={props.dateID}>{props.date}</div> 
+        }
+
+        function BlankDay(props){
+            return <div className='datebox' id={props.dateID}></div>
+        }
+
+        function TickBox(props){
+            console.log('dateID: ', props.dateID, 'index: ', userJunkIndex, 'length: ', userJunkLength);
+            return (<div className='tickdiv'>
+                <img src='greentick.png' alt='greentick' className='tickbox' id={props.dateID}/>
+            </div>)};
+
+        function CrossBox(props){
+            console.log('dateID: ', props.dateID, 'index: ', userJunkIndex, 'length: ', userJunkLength);
+            return (
+                <div className='crossdiv'>
+                    <img src='redcross.png' alt='redcross' className='crossbox' id={props.dateID}/>
+                </div>);}
+
+        function TodayBox(props){
+            return (
+                <div className='todaybox' id={props.dateID}>{props.date}</div>
+            );
+        }
+
+        function WeekBox(props){
+            return (
+                <div className='week'>{props.dateBoxes}</div>
+            );
+        }
+
+        function MonthBox(props){
+            return (
+                <div className='month'>{props.monthBox}</div>
+            );
+        }
+
+        function Streak(){
+
+            return (
+            <div id='streak' className='infoClass'>
+                <h3>Streak: {streak}</h3>
+            </div>);}
+
+        function NextCheatDay(){
+
+            return (
+            <div className='infoStuff' id='nextCheatDay'>
+                <h3>Next Cheat Day: {nextCheatDay}</h3>
+            </div>);}  
+
+        function CheatDay() {
+            return <h1 style= {{visibility: cheatHide? 'hidden':'visible'}}id='cheatDay'>TODAY IS CHEAT DAY!!!</h1>;
+        }
+
+        function ToggleTrueButton(){
+
+            return (
+                <div id='buttonDiv' className='infoStuff'>
+                    <button  id='trueButton' onClick={() => {
+                    noJunkToday = true;
+                    localStorage.setItem('noJunkToday', JSON.stringify(noJunkToday));
+                    console.log('noJunkToday clicked and SAVED: ', noJunkToday);
+                    }}>I did it!</button>
+                </div>
+            );}
+
+        function DaysOfTheWeek(){
+
+            return (
+                <div className='weekdaybar'>
+                    <h2>S</h2>
+                    <h2>M</h2>
+                    <h2>T</h2>
+                    <h2>W</h2>
+                    <h2>T</h2>
+                    <h2>F</h2>
+                    <h2>S</h2>
+                </div>
+            );
+        }
+
+        function MonthandYear() {
+
+            return (
+                <div className='monthandyear'>
+                    <h3>{today.getFullYear()}, {monthArray[today.getMonth()]}</h3>
+                </div>
+            );
+        }
+
+        const calendar = buildMonth();
+
+        const app = (
+            <>
+                <Title/>
+                <MonthandYear/>
+                <DaysOfTheWeek />
+                {calendar}
+                <div id='info'>
+                    <Streak />
+                    <ToggleTrueButton />
+                    <NextCheatDay />
+                    <CheatDay />
+                    <button id='resetButton'onClick={() => hardReset()}>reset all</button>
+                </div>
+            </>
+        );
+
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(app);
+
+    </script>
+  </body>
+</html>
