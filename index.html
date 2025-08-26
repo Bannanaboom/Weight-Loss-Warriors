@@ -39,7 +39,7 @@
         }
 
         function hardReset(){
-            const date = new Date(2025, 8, 1);
+            const date = new Date();
             updateCalendarArray(getdaysInMonth());
             localStorage.setItem('savedMonth', JSON.stringify(date.getMonth()));
             localStorage.setItem('junkFoodArray', JSON.stringify([]));
@@ -324,6 +324,7 @@
                     <CheatDay />
                     <button id='resetButton'onClick={() => hardReset()}>reset all</button>
                 </div>
+                
             </>
         );
 
